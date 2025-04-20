@@ -6,6 +6,11 @@ DOMAIN="chat.leecod.ing"
 EMAIL="shlee.super@gmail.com"
 WEBROOT_PATH="/var/www/certbot"
 
+# 필요한 디렉토리 생성
+mkdir -p nginx/conf.d
+mkdir -p certbot/conf
+mkdir -p certbot/www
+
 if [ -d "./certbot/conf/live/$DOMAIN" ]; then
   echo "✅ 이미 인증서가 존재합니다. 건너뜁니다."
   exit 0

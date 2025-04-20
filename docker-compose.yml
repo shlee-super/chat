@@ -2,6 +2,8 @@ services:
   librechat:
     image: ghcr.io/danny-avila/librechat:latest
     restart: unless-stopped
+    ports:
+    - "3080"
     env_file:
       - .env
     volumes:

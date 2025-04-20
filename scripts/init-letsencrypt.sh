@@ -19,7 +19,7 @@ fi
 # 초기 설정으로 nginx 시작
 cp nginx/initial.conf nginx/conf.d/librechat.conf
 echo "🚀 nginx 컨테이너를 초기 설정으로 기동합니다..."
-docker compose -f ../deploy-compose.yml up -d nginx
+docker compose -f deploy-compose.yml up -d nginx
 
 echo "🔐 Let's Encrypt 인증서를 발급 중입니다..."
 docker run --rm \
@@ -36,4 +36,4 @@ docker run --rm \
 # 인증서 발급 후 전체 설정 적용
 cp nginx/librechat.conf nginx/conf.d/librechat.conf
 echo "🔄 nginx를 재시작하여 HTTPS 설정을 반영합니다..."
-docker compose -f ../deploy-compose.yml restart nginx
+docker compose -f deploy-compose.yml restart nginx

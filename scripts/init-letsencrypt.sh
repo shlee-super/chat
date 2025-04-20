@@ -1,24 +1,28 @@
 #!/bin/bash
 
-# 초기 인증서 발급을 위한 스크립트
-# 반드시 deploy-compose.yml에서 nginx 컨테이너가 먼저 기동된 상태에서 실행
+# 초기 Let's Encrypt 인증서 발급 스크립트
+# 실행 전 deploy-compose.yml의 nginx 컨테이너가 정의되어 있어야 함
 
 set -e
 
 DOMAIN="chat.leecod.ing"
-EMAIL="shlee.super@gmail.com" # 인증서 갱신 알림을 받을 이메일
+EMAIL="shlee.super@gmail.com"
 WEBROOT_PATH="/var/www/certbot"
+COMPOSE_FILE="../deploy-compose.yml"
 
-if [ -d "./certbot/conf/live/$DOMAIN" ]; then
-  echo "이미 인증서가 존재합니다. 건너뜁니다."
+CERT_PATH="./certbot/conf/live/$DOMAIN"
+
+if [ -d "$CERT_PATH" ]; then
+  echo "✅ 인증서가 이미 존재합니다: $CERT_PATH"
+  echo "🚫 발급을 건너뜁니다."
   exit 0
 fi
 
-echo "인증서 발급을 위해 nginx 컨테이너를 시작합니다..."
-docker compose -f ../deploy-compose.yml up -d nginx
+echo "🚀 nginx 컨테이너를 HTTP로 기동합니다..."
+docker compose -f $COMPOSE_FILE up -d nginx
 
-echo "Let's Encrypt 인증서를 발급합니다..."
-docker compose -f ../deploy-compose.yml run --rm certbot \
+echo "🔐 Let's Encrypt 인증서를 발급 중입니다..."
+docker compose -f $COMPOSE_FILE run --rm certbot \
   certonly --webroot \
   --webroot-path=$WEBROOT_PATH \
   --email $EMAIL \
@@ -26,5 +30,7 @@ docker compose -f ../deploy-compose.yml run --rm certbot \
   --no-eff-email \
   -d $DOMAIN
 
-echo "nginx를 재시작하여 HTTPS 설정을 반영합니다..."
-docker compose -f ../deploy-compose.yml restart nginx
+echo "♻️ nginx를 재시작하여 HTTPS 설정을 반영합니다..."
+docker compose -f $COMPOSE_FILE restart nginx
+
+echo "✅ 인증서 발급 및 nginx 재시작 완료"

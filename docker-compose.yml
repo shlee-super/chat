@@ -40,6 +40,14 @@ services:
       - librechat
     networks:
       - librechat-net
+  
+  certbot:
+  image: certbot/certbot
+  volumes:
+    - ./certbot/conf:/etc/letsencrypt
+    - ./certbot/www:/var/www/certbot
+  networks:
+    - app-network
 
 volumes:
   librechat-data:

@@ -17,7 +17,6 @@ registration:
   socialLogins: ["discord", "facebook", "github", "google", "openid"]
  
 endpoints:
-endpoints:
   openAI:
     baseURL: "https://api.openai.com/v1/chat/completions"
     directEndpoint: true

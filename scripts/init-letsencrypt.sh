@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# 초기 인증서 발급을 위한 스크립트
-# 반드시 nginx 컨테이너가 먼저 기동된 상태에서 실행
-
 set -e
 
 DOMAIN="chat.leecod.ing"
@@ -14,7 +11,9 @@ if [ -d "./certbot/conf/live/$DOMAIN" ]; then
   exit 0
 fi
 
-echo "🚀 nginx 컨테이너를 HTTP로 기동합니다..."
+# 초기 설정으로 nginx 시작
+cp nginx/initial.conf nginx/conf.d/librechat.conf
+echo "🚀 nginx 컨테이너를 초기 설정으로 기동합니다..."
 docker compose -f ../deploy-compose.yml up -d nginx
 
 echo "🔐 Let's Encrypt 인증서를 발급 중입니다..."
@@ -29,5 +28,7 @@ docker run --rm \
   --no-eff-email \
   -d $DOMAIN
 
+# 인증서 발급 후 전체 설정 적용
+cp nginx/librechat.conf nginx/conf.d/librechat.conf
 echo "🔄 nginx를 재시작하여 HTTPS 설정을 반영합니다..."
 docker compose -f ../deploy-compose.yml restart nginx

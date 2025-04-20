@@ -1,0 +1,9 @@
+endpoints:
+  openAI:
+    baseURL: "https://api.openai.com/v1/chat/completions"
+    directEndpoint: true
+    apiKey: "${OPENAI_API_KEY}"
+    models:
+      - model: "gpt-4o"
+        completion: true
+

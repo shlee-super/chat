@@ -6,6 +6,7 @@ services:
       - .env
     volumes:
       - librechat-data:/app/backend/data
+      - ./librechat.yaml:/app/librechat.yaml:ro
     depends_on:
       - mongo
     networks:

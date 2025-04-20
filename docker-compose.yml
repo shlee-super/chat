@@ -1,7 +1,6 @@
 services:
-  librechat:
+  app:
     image: ghcr.io/danny-avila/librechat:latest
-    container_name: librechat
     restart: unless-stopped
     env_file:
       - .env
@@ -10,20 +9,18 @@ services:
     depends_on:
       - mongo
     networks:
-      - librechat-net
+      - app-network
 
   mongo:
     image: mongo:6
-    container_name: librechat-mongo
     restart: unless-stopped
     volumes:
       - mongo-data:/data/db
     networks:
-      - librechat-net
+      - app-network
 
   nginx:
     image: nginx:latest
-    container_name: librechat-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -34,13 +31,12 @@ services:
       - ./certbot/www:/var/www/certbot:ro
       - ./certbot/conf:/etc/letsencrypt:ro
     depends_on:
-      - librechat
+      - app
     networks:
-      - librechat-net
+      - app-network
 
   certbot:
     image: certbot/certbot
-    container_name: librechat-certbot
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
@@ -52,4 +48,4 @@ volumes:
   mongo-data:
 
 networks:
-  librechat-net:
+  app-network:

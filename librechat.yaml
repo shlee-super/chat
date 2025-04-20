@@ -22,7 +22,25 @@ endpoints:
     directEndpoint: true
     apiKey: "${OPENAI_API_KEY}"
     models:
+      - model: "gpt-4.1"
+        completion: true
+      - model: "gpt-4.1-mini"
+        completion: true
+      - model: "gpt-4.1-nano"
+        completion: true
+      - model: "o3"
+        completion: true
+      - model: "o4-mini"
+        completion: true
+      - model: "gpt-4.5"
+        completion: true
       - model: "gpt-4o"
+        completion: true
+      - model: "gpt-4o-mini"
+        completion: true
+      - model: "o1"
+        completion: true
+      - model: "o1-mini"
         completion: true
 
   custom:

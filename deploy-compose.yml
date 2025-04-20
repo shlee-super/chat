@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  librechat:
+    image: ghcr.io/danny-avila/librechat:latest
+    container_name: librechat
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - librechat-data:/app/backend/data
+    depends_on:
+      - mongo
+    networks:
+      - librechat-net
+
+  mongo:
+    image: mongo:6
+    container_name: librechat-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - librechat-net
+
+  nginx:
+    image: nginx:latest
+    container_name: librechat-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/librechat.conf:/etc/nginx/conf.d/librechat.conf:ro
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    depends_on:
+      - librechat
+    networks:
+      - librechat-net
+
+volumes:
+  librechat-data:
+  mongo-data:
+
+networks:
+  librechat-net:

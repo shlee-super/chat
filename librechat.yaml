@@ -20,6 +20,7 @@ endpoints:
   openAI:
     baseURL: "https://api.openai.com/v1/chat/completions"
     directEndpoint: true
+    dropParams: ["temperature"]
     apiKey: "${OPENAI_API_KEY}"
     models:
       default: [

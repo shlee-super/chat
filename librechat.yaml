@@ -25,21 +25,9 @@ endpoints:
     models:
       default: [
         "gpt-4",
-        "gpt-3.5-turbo",
+        "o4-mini",
         "gpt-4.1",
         "gpt-4.1-mini",
-        "gpt-4.1-nano",
-        "o3",
-        "o4-mini",
-        "gpt-4o",
-        "gpt-4o-mini",
-        "o1",
-        "o1-mini"
+        "gpt-4.1-nano"
       ]
       fetch: false
-
-ocr:
-  mistralModel: "mistral-ocr-latest"  # Optional: Specify Mistral model, defaults to "mistral-ocr-latest"
-  apiKey: "OFHusm6S8Tx9dTKkvQ1kTIIhWz8v78xq"        # Optional: Defaults to OCR_API_KEY env variable
-  baseURL: "https://api.mistral.ai/v1"  # Optional: Defaults to OCR_BASEURL env variable, or Mistral's API if no variable set
-  strategy: "mistral_ocr"               # Optional: Defaults to "mistral_ocr" (only option currently available)

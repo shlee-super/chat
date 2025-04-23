@@ -1,4 +1,17 @@
 services:
+  rag_api:
+    image: ghcr.io/danny-avila/librechat-rag-api-dev:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - RAG_OPENAI_API_KEY=${RAG_OPENAI_API_KEY}
+      - EMBEDDINGS_PROVIDER=${EMBEDDINGS_PROVIDER}
+      - EMBEDDINGS_MODEL=${EMBEDDINGS_MODEL}
+    networks:
+      - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   librechat:
     image: ghcr.io/danny-avila/librechat:latest
     restart: unless-stopped

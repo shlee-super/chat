@@ -16,7 +16,7 @@ services:
     image: ghcr.io/danny-avila/librechat:latest
     restart: unless-stopped
     ports:
-    - "3080"
+    - "3080:3080"  # Load Balancer가 접근할 수 있도록 포트 노출
     env_file:
       - .env
     volumes:
@@ -37,29 +37,7 @@ services:
     networks:
       - app-network
 
-  nginx:
-    image: nginx:latest
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./certbot/www:/var/www/certbot:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-    depends_on:
-      - librechat
-    networks:
-      - app-network
 
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-    depends_on:
-      - nginx
 
 volumes:
   librechat-data:

@@ -1,0 +1,6 @@
+[DEFAULT]
+user=ocid1.user.oc1..aaaaaaaakgocvvnuxateyfcyqxxtfhwvj2drif5xflcmd7hvqtofjib3gqta
+fingerprint=dc:63:36:a9:67:9a:fe:d4:ae:b9:bd:10:23:5d:19:7a
+tenancy=ocid1.tenancy.oc1..aaaaaaaaldcbuioiu42ur5xbgssw33efbhnp7cwr7x3jnz6dl3o7re5bze6q
+region=ap-chuncheon-1
+key_file=<path to your private keyfile> # TODO

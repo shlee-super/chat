@@ -1,0 +1,147 @@
+name: Renew Let's Encrypt Certificate
+
+on:
+  schedule:
+    # 매 2달마다 1일 오전 2시에 실행 (UTC)
+    - cron: '0 2 1 */2 *'
+  workflow_dispatch: # 수동 실행 가능
+    inputs:
+      force_renewal:
+        description: 'Force certificate renewal (ignore expiry check)'
+        required: false
+        default: false
+        type: boolean
+      domains:
+        description: 'Domains to renew (comma separated)'
+        required: false
+        default: '*.leecod.ing,leecod.ing'
+        type: string
+
+env:
+  OCI_CLI_REGION: ${{ vars.OCI_CLI_REGION }}
+  OCI_CLI_TENANCY: ${{ vars.OCI_CLI_TENANCY }}
+  OCI_CLI_USER: ${{ vars.OCI_CLI_USER }}
+  OCI_CLI_FINGERPRINT: ${{ vars.OCI_CLI_FINGERPRINT }}
+  OCI_CLI_KEY_CONTENT: ${{ vars.OCI_CLI_KEY_CONTENT }}
+  LOAD_BALANCER_ID: ${{ vars.LOAD_BALANCER_ID }}
+  CERTIFICATE_OCID: ${{ vars.CERTIFICATE_OCID }}
+  EMAIL: ${{ vars.LETSENCRYPT_EMAIL }}
+  DOMAINS: ${{ github.event.inputs.domains || '*.leecod.ing,leecod.ing' }}
+  FORCE_RENEWAL: ${{ github.event.inputs.force_renewal || 'false' }}
+
+jobs:
+  renew-certificate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Dependencies
+      run: |
+        # Install Certbot and certbot-dns-oci plugin
+        sudo apt-get update
+        sudo apt-get install -y certbot python3-pip
+        pip3 install certbot-dns-oci
+        
+        # Install OCI CLI
+        curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
+        bash install.sh --accept-all-defaults
+        echo "$HOME/bin" >> $GITHUB_PATH
+        
+        # Setup OCI configuration
+        mkdir -p ~/.oci
+        echo "$OCI_CLI_KEY_CONTENT" > ~/.oci/oci_api_key.pem
+        chmod 600 ~/.oci/oci_api_key.pem
+        
+        cat > ~/.oci/config << EOF
+        [DEFAULT]
+        user=$OCI_CLI_USER
+        fingerprint=$OCI_CLI_FINGERPRINT
+        key_file=~/.oci/oci_api_key.pem
+        tenancy=$OCI_CLI_TENANCY
+        region=$OCI_CLI_REGION
+        EOF
+
+    - name: Verify setup
+      run: |
+        certbot --version
+        oci --version
+        pip3 show certbot-dns-oci
+        # Test OCI DNS access
+        oci dns zone list --compartment-id "$(oci iam compartment list --query 'data[0].id' --raw-output)" --limit 1
+
+    - name: Make renewal script executable
+      run: chmod +x scripts/renew-letsencrypt-certificate.sh
+
+    - name: Run certificate renewal
+      id: renewal
+      run: |
+        set +e # Continue on error to capture output
+        
+        # Set force renewal if requested
+        if [ "$FORCE_RENEWAL" = "true" ]; then
+          export FORCE_RENEWAL=true
+        fi
+        
+        scripts/renew-letsencrypt-certificate.sh 2>&1 | tee renewal.log
+        RENEWAL_EXIT_CODE=${PIPESTATUS[0]}
+        
+        # Set outputs for next steps
+        echo "exit_code=$RENEWAL_EXIT_CODE" >> $GITHUB_OUTPUT
+        echo "log_content<<EOF" >> $GITHUB_OUTPUT
+        cat renewal.log >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        exit $RENEWAL_EXIT_CODE
+
+    - name: Upload renewal logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: certificate-renewal-logs-${{ github.run_number }}
+        path: renewal.log
+        retention-days: 30
+
+    - name: Create issue on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = '🚨 Let\'s Encrypt Certificate Renewal Failed';
+          const body = `
+          ## Certificate Renewal Failure Report
+          
+          **Domains:** ${process.env.DOMAINS}
+          **Timestamp:** ${new Date().toISOString()}
+          **Workflow Run:** [#${context.runNumber}](${context.payload.repository.html_url}/actions/runs/${context.runId})
+          **Force Renewal:** ${process.env.FORCE_RENEWAL}
+          
+          ### Error Details
+          \`\`\`
+          ${{ steps.renewal.outputs.log_content }}
+          \`\`\`
+          
+          Please check the logs and resolve the issue.
+          
+          ### Troubleshooting Steps
+          1. Check OCI CLI configuration and permissions
+          2. Verify OCI DNS zone exists and is accessible
+          3. Ensure domain DNS is properly configured
+          4. Check OCI Load Balancer configuration (if applicable)
+          5. Verify email address for Let's Encrypt account
+          6. Check OCI compartment access permissions
+          
+          ### Manual Renewal Command
+          You can manually trigger renewal by running this workflow with the "workflow_dispatch" trigger.
+          
+          This issue was automatically created by the certificate renewal workflow.
+          `;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['bug', 'certificate', 'automation', 'letsencrypt']
+          });

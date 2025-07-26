@@ -1,0 +1,19 @@
+# Terraform backend configuration
+region           = "ap-seoul-1"
+tenancy_ocid     = "ocid1.tenancy.oc1..your-tenancy-ocid"
+user_ocid        = "ocid1.user.oc1..your-user-ocid" 
+fingerprint      = "your-api-key-fingerprint"
+private_key_path = "~/.oci/oci_api_key.pem"
+compartment_id   = "ocid1.compartment.oc1..your-compartment-ocid"
+
+# Network configuration
+vcn_id            = "ocid1.vcn.oc1.ap-seoul-1.your-vcn-ocid"
+public_subnet_id  = "ocid1.subnet.oc1.ap-seoul-1.your-public-subnet-ocid"
+private_subnet_id = "ocid1.subnet.oc1.ap-seoul-1.your-private-subnet-ocid"
+
+# Instance configuration
+instance_private_ip = "10.0.1.100"  # Your instance's private IP
+
+# Application configuration
+domain_name = "chat.leecod.ing"
+app_name    = "librechat"

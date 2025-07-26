@@ -41,8 +41,18 @@ jobs:
       run: |
         # Install Certbot and certbot-dns-oci plugin
         sudo apt-get update
-        sudo apt-get install -y certbot python3-pip
-        pip3 install certbot-dns-oci
+        sudo apt-get install -y certbot python3-pip python3-venv
+        
+        # Create virtual environment for better dependency management
+        python3 -m venv certbot-env
+        source certbot-env/bin/activate
+        
+        # Install certbot and plugin in virtual environment
+        pip install --upgrade pip
+        pip install certbot certbot-dns-oci
+        
+        # Make certbot available globally
+        sudo ln -sf $(pwd)/certbot-env/bin/certbot /usr/local/bin/certbot
         
         # Install OCI CLI
         curl -L -O https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh
@@ -65,9 +75,16 @@ jobs:
 
     - name: Verify setup
       run: |
+        # Activate virtual environment for certbot commands
+        source certbot-env/bin/activate
+        
         certbot --version
         oci --version
-        pip3 show certbot-dns-oci
+        
+        # Check if certbot-dns-oci plugin is properly installed
+        certbot plugins | grep dns-oci || echo "Plugin not found in certbot plugins list"
+        pip show certbot-dns-oci
+        
         # Test OCI DNS access
         oci dns zone list --compartment-id "$(oci iam compartment list --query 'data[0].id' --raw-output)" --limit 1
 
@@ -78,6 +95,9 @@ jobs:
       id: renewal
       run: |
         set +e # Continue on error to capture output
+        
+        # Activate virtual environment for certbot
+        source certbot-env/bin/activate
         
         # Set force renewal if requested
         if [ "$FORCE_RENEWAL" = "true" ]; then

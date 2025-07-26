@@ -35,13 +35,19 @@ error() {
 
 # Check if Certbot is installed and configured
 check_certbot() {
+    # Activate virtual environment if it exists (for GitHub Actions)
+    if [ -f "certbot-env/bin/activate" ]; then
+        source certbot-env/bin/activate
+        log "Activated certbot virtual environment"
+    fi
+    
     if ! command -v certbot &> /dev/null; then
         error "Certbot is not installed. Please install it first."
     fi
     
     # Check if certbot-dns-oci plugin is available
-    if ! pip list | grep -q "certbot-dns-oci"; then
-        error "certbot-dns-oci plugin is not installed. Please install it first."
+    if ! certbot plugins | grep -q "dns-oci"; then
+        error "certbot-dns-oci plugin is not installed or not recognized by certbot. Please install it first."
     fi
     
     # Check if OCI CLI is available
